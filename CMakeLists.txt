@@ -4,22 +4,24 @@ project(drake_vendor)
 
 find_package(ament_cmake_core REQUIRED)
 
-if (NOT drake_DIR)
-  set(drake_DIR "/opt/drake")
-endif()
-
-set(drake_DIR_set "${drake_DIR}")
-
-find_package(drake QUIET PATHS ${drake_DIR})
+find_package(drake QUIET)
 
 if (NOT drake_FOUND)
-  message(FATAL_ERROR "\
- =====================================================================\n\
- A Drake installation was not found at ${drake_DIR_set}.\n\
- -Ddrake_DIR= can be used to pass a path to an existing drake installation.\n\
- Check http://drake.mit.edu/installation.html for further reference\n\
- =====================================================================\n\
+  if (NOT drake_DIR)
+    set(drake_DIR "/opt/drake")
+  endif()
+
+  find_package(drake QUIET PATHS ${drake_DIR})
+
+  if (NOT drake_FOUND)
+    message(FATAL_ERROR "\
+=====================================================================\n\
+No drake installation was found.\n\
+-Ddrake_DIR= can be used to pass a path to an existing drake installation.\n\
+Check http://drake.mit.edu/installation.html for further reference\n\
+=====================================================================\n\
  ")
+  endif()
 endif()
 
 message(STATUS "Drake installation found at: ${drake_DIR}")
