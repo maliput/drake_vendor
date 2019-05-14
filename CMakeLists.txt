@@ -53,4 +53,10 @@ endif()
 
 ament_environment_hooks(drake-package_hook.sh.in)
 
+install(
+  PROGRAMS bin/which-drake.sh
+  DESTINATION bin
+  RENAME which-drake
+)
+
 ament_package(CONFIG_EXTRAS drake-extras.cmake.in)
