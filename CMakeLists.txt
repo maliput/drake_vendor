@@ -40,8 +40,8 @@ if("${drake_RELEASE_DATE}" LESS "${drake_EXPECTED_RELEASE_DATE}")
 =====================================================================\n\
 Found a drake installation but it is too old.\n\
 Check http://drake.mit.edu/installation.html to update it.\n\
-=====================================================================\n\
-  ")
+=====================================================================\
+")
 endif()
 
 message(STATUS "Drake installation found at: ${drake_DIR}")
@@ -51,8 +51,8 @@ if("${drake_RELEASE_DATE}" GREATER "${drake_EXPECTED_RELEASE_DATE}")
 =====================================================================\n\
 Drake version found is newer than expected, proceed at your own risk.\n\
 Check TRI's dsim index repository for reference on supported versions.\n\
-=====================================================================\n\
-  ")
+=====================================================================\
+")
 endif()
 
 ament_environment_hooks(drake-package_hook.sh.in)
