@@ -6,7 +6,7 @@ prereqs.init 'The drake vendor source distribution prerequisites script'
 
 prereqs.assert_sudo
 
-if prereqs.tag_applies "drake|default|all"; then
+if prereqs.tag_applies "drake|all"; then
     DRAKE_INSTALL_PREFIX=${DRAKE_INSTALL_PREFIX:-/opt/drake}
 
     DRAKE_VENDOR_PACKAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P)"
