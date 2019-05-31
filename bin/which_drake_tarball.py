@@ -1,9 +1,12 @@
 #! /usr/bin/env python3
 
+import argparse
+import json
+import re
+import sys
+
 from datetime import datetime
 from datetime import timedelta
-
-import json
 
 from urllib.request import urlopen
 
@@ -44,7 +47,6 @@ def main():
         'version', type=str,
         help='Drake nightly version, as commit SHA or branch name.'
     )
-
     args = parser.parse_args()
 
     print(which_drake_tarball(args.version, args.distro))
@@ -55,6 +57,6 @@ def main():
 if __name__ == '__main__':
     try:
         sys.exit(main())
-    except Exception e:
+    except Exception as e:
         print(str(e))
         sys.exit(1)

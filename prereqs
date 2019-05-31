@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -e pipefail
+
 source prereqs.lib
 
 prereqs.init 'The drake vendor source distribution prerequisites script'
@@ -11,21 +13,25 @@ if prereqs.tag_applies "drake|all"; then
 
     DRAKE_VENDOR_PACKAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P)"
 
-    EXPECTED_DRAKE_VERSION_FILE="${DRAKE_VENDOR_PACKAGE_ROOT}/drake_version.txt"
-    read -r EXPECTED_DRAKE_RELEASE_DATE EXPECTED_DRAKE_VERSION < ${EXPECTED_DRAKE_VERSION_FILE}
+    EXPECTED_DRAKE_VERSION_FILE="${DRAKE_VENDOR_PACKAGE_ROOT}/DRAKE_VERSION.txt"
+    read -r EXPECTED_DRAKE_RELEASE_DATE EXPECTED_DRAKE_VERSION <<< "$(cat ${EXPECTED_DRAKE_VERSION_FILE})"
 
     INSTALLED_DRAKE_VERSION_FILE="${DRAKE_INSTALL_PREFIX}/share/doc/drake/VERSION.TXT"
     if [ -d "${DRAKE_INSTALL_PREFIX}" ]; then
         if [ ! -f "${INSTALLED_DRAKE_VERSION_FILE}" ]; then
             prereqs.die "${DRAKE_INSTALL_PREFIX} is not empty and it's not a drake installation"
         fi
-        prereqs.done "Found drake installation at ${DRAKE_INSTALL_PREFIX}"
+        read -r INSTALLED_DRAKE_RELEASE_DATE INSTALLED_DRAKE_VERSION <<< "$(cat ${INSTALLED_DRAKE_VERSION_FILE})"
+        if [ "${INSTALLED_DRAKE_RELEASE_DATE}" -ge "${EXPECTED_DRAKE_RELEASE_DATE}" ]; then
+            prereqs.done
+        fi
+        rm -rf /opt/drake
     fi
 
     echo "Installing drake nightly into '${DRAKE_INSTALL_PREFIX}'"
     mkdir -p ${DRAKE_INSTALL_PREFIX}
 
-    WHICH_DRAKE_TARBALL_SCRIPT="${DRAKE_VENDOR_PACKAGE_ROOT}/bin/which-drake-tarball.py"
+    WHICH_DRAKE_TARBALL_SCRIPT="${DRAKE_VENDOR_PACKAGE_ROOT}/bin/which_drake_tarball.py"
     DRAKE_NIGHTLY_URL=$(python3 ${WHICH_DRAKE_TARBALL_SCRIPT} ${EXPECTED_DRAKE_VERSION})
     if curl -o /tmp/drake.tar.gz ${DRAKE_NIGHTLY_URL}; then
         tar xvz -f /tmp/drake.tar.gz -C /opt/drake --strip 1
@@ -34,11 +40,17 @@ if prereqs.tag_applies "drake|all"; then
         prereqs.die "Failed to pull drake nightly tarball from ${DRAKE_NIGHTLY_URL}"
     fi
 
-    read -r PULLED_DRAKE_RELEASE_DATE PULLED_DRAKE_VERSION < "${INSTALLED_DRAKE_VERSION_FILE}"
+    read -r PULLED_DRAKE_RELEASE_DATE PULLED_DRAKE_VERSION <<< "$(cat ${INSTALLED_DRAKE_VERSION_FILE})"
     if [ "${PULLED_DRAKE_RELEASE_DATE}" -ne "${EXPECTED_DRAKE_RELEASE_DATE}" ] ||
-           [ "${PULLED_DRAKE_VERSION}" -ne "${EXPECTED_DRAKE_VERSION}" ]; then
+           [ "${PULLED_DRAKE_VERSION}" != "${EXPECTED_DRAKE_VERSION}" ]; then
         prereqs.die "Pulled drake nightly version (${PULLED_DRAKE_RELEASE_DATE}:${PULLED_DRAKE_VERSION})" \
                     " does not match expected version (${EXPECTED_DRAKE_RELEASE_DATE}:${EXPECTED_DRAKE_VERSION})."
+    fi
+
+    if ! prereqs.interactive; then
+        yes | /opt/drake/share/drake/setup/install_prereqs
+    else
+        /opt/drake/share/drake/setup/install_prereqs
     fi
 fi
 
