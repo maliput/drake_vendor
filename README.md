@@ -37,7 +37,7 @@ which-drake
 3. Re-install `drake_vendor` prerequisites in your workspace:
    
    ```sh
-   prereqs-install -y path/to/drake_vendor
+   sudo prereqs-install -t all path/to/drake_vendor
    ```
 
 4. Open a PR with the change into this repository and merge it into master.
