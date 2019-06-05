@@ -25,7 +25,7 @@ if prereqs.tag_applies "drake|all"; then
         if [ "${INSTALLED_DRAKE_RELEASE_DATE}" -ge "${EXPECTED_DRAKE_RELEASE_DATE}" ]; then
             prereqs.done
         fi
-        rm -rf /opt/drake
+        rm -rf ${DRAKE_INSTALL_PREFIX}
     fi
 
     echo "Installing drake nightly into '${DRAKE_INSTALL_PREFIX}'"
@@ -34,7 +34,7 @@ if prereqs.tag_applies "drake|all"; then
     WHICH_DRAKE_TARBALL_SCRIPT="${DRAKE_VENDOR_PACKAGE_ROOT}/bin/which_drake_tarball.py"
     DRAKE_NIGHTLY_URL=$(python3 ${WHICH_DRAKE_TARBALL_SCRIPT} ${EXPECTED_DRAKE_VERSION})
     if curl -o /tmp/drake.tar.gz ${DRAKE_NIGHTLY_URL}; then
-        tar xvz -f /tmp/drake.tar.gz -C /opt/drake --strip 1
+        tar xvz -f /tmp/drake.tar.gz -C ${DRAKE_INSTALL_PREFIX} --strip 1
         rm /tmp/drake.tar.gz
     else
         prereqs.die "Failed to pull drake nightly tarball from ${DRAKE_NIGHTLY_URL}"
@@ -48,9 +48,9 @@ if prereqs.tag_applies "drake|all"; then
     fi
 
     if ! prereqs.interactive; then
-        yes | /opt/drake/share/drake/setup/install_prereqs
+        yes | ${DRAKE_INSTALL_PREFIX}/share/drake/setup/install_prereqs
     else
-        /opt/drake/share/drake/setup/install_prereqs
+        ${DRAKE_INSTALL_PREFIX}/share/drake/setup/install_prereqs
     fi
 fi
 
