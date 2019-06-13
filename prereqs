@@ -31,17 +31,25 @@ if prereqs.tag_applies "drake|all"; then
         if [ "${INSTALLED_DRAKE_RELEASE_DATE}" -ge "${EXPECTED_DRAKE_RELEASE_DATE}" ]; then
             prereqs.done
         fi
+
+        if prereqs.interactive; then
+            # Prompt the user before updating the existing installation.
+            read -p "Found an old drake installation at '${DRAKE_INSTALL_PREFIX}' (${INSTALLED_DRAKE_RELEASE_DATE}:${INSTALLED_DRAKE_VERSION:0:12}), do you want to update it? [Y/n]: " answer
+            if [[ "${answer:0:1}" =~ n|N ]]; then
+                prereqs.done
+            fi
+        fi
         # Remove older installation.
         rm -rf ${DRAKE_INSTALL_PREFIX}
     fi
 
-    echo "Installing drake nightly into '${DRAKE_INSTALL_PREFIX}'"
-    mkdir -p ${DRAKE_INSTALL_PREFIX}
+    echo "Installing drake nightly (${EXPECTED_DRAKE_RELEASE_DATE}:${EXPECTED_DRAKE_VERSION:0:12}) into '${DRAKE_INSTALL_PREFIX}'"
 
     # Pull and decompress the expected nightly tarball at the installation location.
     WHICH_DRAKE_TARBALL_SCRIPT="${DRAKE_VENDOR_PACKAGE_ROOT}/bin/which_drake_tarball.py"
     DRAKE_NIGHTLY_URL=$(python3 ${WHICH_DRAKE_TARBALL_SCRIPT} ${EXPECTED_DRAKE_VERSION})
     if curl -o /tmp/drake.tar.gz ${DRAKE_NIGHTLY_URL}; then
+        mkdir -p ${DRAKE_INSTALL_PREFIX}
         tar xvz -f /tmp/drake.tar.gz -C ${DRAKE_INSTALL_PREFIX} --strip 1
         rm /tmp/drake.tar.gz
     else
@@ -53,8 +61,8 @@ if prereqs.tag_applies "drake|all"; then
     # Ensure an exact match between expected and actual installation versions.
     if [ "${PULLED_DRAKE_RELEASE_DATE}" -ne "${EXPECTED_DRAKE_RELEASE_DATE}" ] ||
            [ "${PULLED_DRAKE_VERSION}" != "${EXPECTED_DRAKE_VERSION}" ]; then
-        prereqs.die "Pulled drake nightly version (${PULLED_DRAKE_RELEASE_DATE}:${PULLED_DRAKE_VERSION})" \
-                    " does not match expected version (${EXPECTED_DRAKE_RELEASE_DATE}:${EXPECTED_DRAKE_VERSION})."
+        prereqs.die "Pulled drake nightly version (${PULLED_DRAKE_RELEASE_DATE}:${PULLED_DRAKE_VERSION:0:12})" \
+                    " does not match expected version (${EXPECTED_DRAKE_RELEASE_DATE}:${EXPECTED_DRAKE_VERSION:0:12})."
     fi
 
     # Install drake installation prerequisites.
