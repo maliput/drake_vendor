@@ -26,8 +26,8 @@ if prereqs.tag_applies "drake|all"; then
         # Retrieve installed commit SHA and release date.
         read -r INSTALLED_DRAKE_RELEASE_DATE INSTALLED_DRAKE_VERSION <<< "$(cat ${INSTALLED_DRAKE_VERSION_FILE})"
 
-        # Leave if the existing installation if its version is not older than expected.
-        # It is assumed that if the release date matches, so it will the commit SHA.
+        # Leave if the version of the existing drake installation is not older than expected.
+        # It is assumed that if the release date matches, the commit SHA will match too.
         if [ "${INSTALLED_DRAKE_RELEASE_DATE}" -ge "${EXPECTED_DRAKE_RELEASE_DATE}" ]; then
             prereqs.done
         fi
