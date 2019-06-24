@@ -1,6 +1,26 @@
 # drake_vendor
 
-Ament CMake shim package for drake.
+## Overview
+
+`drake_vendor` is an ament cmake shim for `drake`, easing its use in a `colcon` workspace
+whether `drake` sources are part of the build or a binary distribution has been installed
+on the system.
+
+Upon CMake configuration, an attempt is made to find an existing `drake` installation. If
+it's not found, the build will fail. If it's found, its `VERSION.txt` file is matched against
+the expected [`DRAKE_VERSION.txt`](DRAKE_VERSION.txt) file. Only exact matches result in silent
+success. Older versions will result in an error while newer versions will result in a warning.
+
+In addition to this functionality, a [prerequisites script](prereqs) is available to automate
+the installation of binary `drake` nightly distributions. First, an attempt is made to find an
+existing `drake` installation at the path specified by the `DRAKE_INSTALL_PREFIX` environment
+variable, falling back to `/opt/drake` if the latter is not defined.
+If it's found and it's either an exact match with the expected version or a newer one, no
+installation is carried out. If it's found and it's an older version, the expected version is
+installed in replacement of the previously found one. If it's not found, the expected version is
+installed. After `drake` is installed, a sanity check is performed to ensure that the installed
+version is exactly the version specified in [`DRAKE_VERSION.txt`](DRAKE_VERSION.txt) (and thus
+the version we attempted to install in the first place).
 
 ## How to use it
 
