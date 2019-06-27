@@ -1,4 +1,0 @@
-ament_prepend_unique_value DRAKE_RESOURCE_ROOT "@drake_ROOT@/share"
-ament_prepend_unique_value PYTHONPATH "@drake_ROOT@/lib/python3.6/site-packages"
-ament_prepend_unique_value LD_LIBRARY_PATH "@drake_ROOT@/lib"
-ament_prepend_unique_value PATH "@drake_ROOT@/bin"
