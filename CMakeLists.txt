@@ -12,6 +12,7 @@ if (NOT drake_FOUND)
     set(drake_DIR "$ENV{DRAKE_INSTALL_PREFIX}")
   endif()
 
+  message(STATUS "Looking for a drake installation at ${drake_DIR}")
   find_package(drake QUIET PATHS ${drake_DIR})
 
   if (NOT drake_FOUND)
