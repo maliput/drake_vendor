@@ -7,10 +7,12 @@ find_package(ament_cmake_core REQUIRED)
 find_package(drake QUIET)
 
 if (NOT drake_FOUND)
-  if (NOT drake_DIR)
-    set(drake_DIR "/opt/drake")
+  set(drake_DIR "/opt/drake")
+  if (DEFINED ENV{DRAKE_INSTALL_PREFIX})
+    set(drake_DIR "$ENV{DRAKE_INSTALL_PREFIX}")
   endif()
 
+  message(STATUS "Looking for a drake installation at ${drake_DIR}")
   find_package(drake QUIET PATHS ${drake_DIR})
 
   if (NOT drake_FOUND)
@@ -55,19 +57,27 @@ Check TRI's dsim index repository for reference on supported versions.\n\
 ")
 endif()
 
-ament_environment_hooks(drake-package_hook.sh.in)
+ament_environment_hooks(cmake/drake-package_hook.sh.in)
 
 install(
-  PROGRAMS bin/which_drake.sh
+  PROGRAMS scripts/which_drake.sh
   DESTINATION bin
   RENAME which-drake
 )
 
 install(
-  PROGRAMS bin/which_drake_tarball.py
-  DESTINATION bin
-  RENAME which-drake-tarball
+  PROGRAMS prereqs
+  DESTINATION share
 )
 
+install(
+  FILES DRAKE_VERSION.txt
+  DESTINATION share
+)
 
-ament_package(CONFIG_EXTRAS drake-extras.cmake.in)
+install(
+  DIRECTORY etc
+  DESTINATION share
+)
+
+ament_package(CONFIG_EXTRAS cmake/drake-extras.cmake.in)

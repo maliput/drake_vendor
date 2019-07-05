@@ -11,10 +11,10 @@ prereqs.assert_sudo
 if prereqs.tag_applies "drake|all"; then
     DRAKE_INSTALL_PREFIX=${DRAKE_INSTALL_PREFIX:-/opt/drake}
 
-    DRAKE_VENDOR_PACKAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P)"
+    DRAKE_VENDOR_PREREQS_DIRPATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P)"
 
     # Retrieve expected commit SHA and release date.
-    EXPECTED_DRAKE_VERSION_FILE="${DRAKE_VENDOR_PACKAGE_ROOT}/DRAKE_VERSION.txt"
+    EXPECTED_DRAKE_VERSION_FILE="${DRAKE_VENDOR_PREREQS_DIRPATH}/DRAKE_VERSION.txt"
     read -r EXPECTED_DRAKE_RELEASE_DATE EXPECTED_DRAKE_VERSION <<< "$(cat ${EXPECTED_DRAKE_VERSION_FILE})"
 
     # Look for an existing installation.
@@ -46,7 +46,7 @@ if prereqs.tag_applies "drake|all"; then
     echo "Installing drake nightly (${EXPECTED_DRAKE_RELEASE_DATE}:${EXPECTED_DRAKE_VERSION:0:12}) into '${DRAKE_INSTALL_PREFIX}'"
 
     # Pull and decompress the expected nightly tarball at the installation location.
-    WHICH_DRAKE_TARBALL_SCRIPT="${DRAKE_VENDOR_PACKAGE_ROOT}/bin/which_drake_tarball.py"
+    WHICH_DRAKE_TARBALL_SCRIPT="${DRAKE_VENDOR_PREREQS_DIRPATH}/etc/which_drake_tarball.py"
     DRAKE_NIGHTLY_URL=$(python3 ${WHICH_DRAKE_TARBALL_SCRIPT} ${EXPECTED_DRAKE_VERSION})
     if curl -o /tmp/drake.tar.gz ${DRAKE_NIGHTLY_URL}; then
         mkdir -p ${DRAKE_INSTALL_PREFIX}
