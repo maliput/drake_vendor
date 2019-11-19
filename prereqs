@@ -13,6 +13,14 @@ if prereqs.tag_applies "drake|all"; then
 
     DRAKE_VENDOR_PREREQS_DIRPATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P)"
 
+    function install_prereqs() {
+        if ! prereqs.interactive; then
+            yes | ${DRAKE_INSTALL_PREFIX}/share/drake/setup/install_prereqs
+        else
+            ${DRAKE_INSTALL_PREFIX}/share/drake/setup/install_prereqs
+        fi
+    }
+
     # Retrieve expected commit SHA and release date.
     EXPECTED_DRAKE_VERSION_FILE="${DRAKE_VENDOR_PREREQS_DIRPATH}/DRAKE_VERSION.txt"
     read -r EXPECTED_DRAKE_RELEASE_DATE EXPECTED_DRAKE_VERSION <<< "$(cat ${EXPECTED_DRAKE_VERSION_FILE})"
@@ -29,6 +37,8 @@ if prereqs.tag_applies "drake|all"; then
         # Leave if the version of the existing drake installation is not older than expected.
         # It is assumed that if the release date matches, the commit SHA will match too.
         if [ "${INSTALLED_DRAKE_RELEASE_DATE}" -ge "${EXPECTED_DRAKE_RELEASE_DATE}" ]; then
+            # Install drake installation prerequisites anyways.
+            install_prereqs
             prereqs.done
         fi
 
@@ -36,6 +46,8 @@ if prereqs.tag_applies "drake|all"; then
             # Prompt the user before updating the existing installation.
             read -p "Found an old drake installation at '${DRAKE_INSTALL_PREFIX}' (${INSTALLED_DRAKE_RELEASE_DATE}:${INSTALLED_DRAKE_VERSION:0:12}), do you want to update it? [Y/n]: " answer
             if [[ "${answer:0:1}" =~ n|N ]]; then
+                # Install drake installation prerequisites anyways.
+                install_prereqs
                 prereqs.done
             fi
         fi
@@ -66,11 +78,7 @@ if prereqs.tag_applies "drake|all"; then
     fi
 
     # Install drake installation prerequisites.
-    if ! prereqs.interactive; then
-        yes | ${DRAKE_INSTALL_PREFIX}/share/drake/setup/install_prereqs
-    else
-        ${DRAKE_INSTALL_PREFIX}/share/drake/setup/install_prereqs
-    fi
+    install_prereqs
 fi
 
 prereqs.done
