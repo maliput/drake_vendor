@@ -1,1 +1,3 @@
+get_filename_component(DRAKE_ROOT @drake_ROOT@ REALPATH) 
+set(CMAKE_IGNORE_PATH "${CMAKE_IGNORE_PATH};${DRAKE_ROOT}/lib/cmake/ignition-math6/")
 find_package(drake REQUIRED PATHS @drake_DIR@)
