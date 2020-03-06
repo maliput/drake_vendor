@@ -1,7 +1,14 @@
 # Drake brings ignition math 6 but cmake machinery is not the same, leading to problems
 # when trying to find the specific targets of that component. Code below makes sure that
-# cmake ignores drake's version of the library and looks for it in the default system directory.
+# cmake ignores drake's version of the library and looks for it in the default system directory only 
+# when there is another ignition math 6 library besides the one that drakes brings.
 get_filename_component(DRAKE_ROOT @drake_ROOT@ REALPATH)
+set(CMAKE_IGNORE_PATH_BACKUP "${CMAKE_IGNORE_PATH}")
 set(CMAKE_IGNORE_PATH "${CMAKE_IGNORE_PATH};${DRAKE_ROOT}/lib/cmake/ignition-math6/")
+
+find_library(isInstalled NAMES ignition-math6)
+  if(${isInstalled} STREQUAL "isInstalled-NOTFOUND")
+    set(CMAKE_IGNORE_PATH "${CMAKE_IGNORE_PATH_BACKUP}")
+  endif()
 
 find_package(drake REQUIRED PATHS @drake_DIR@)
