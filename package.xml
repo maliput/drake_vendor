@@ -4,10 +4,10 @@
   schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>drake_vendor</name>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
   <description>CMake shim over the drake library.</description>
   <maintainer email="daniel.stonier@tri.global">Daniel Stonier</maintainer>
-  <license>TODO</license>
+  <license file="LICENSE">BSD 3-Clause</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_export_depend>ament_cmake</buildtool_export_depend>
