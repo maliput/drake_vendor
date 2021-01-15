@@ -37,7 +37,7 @@ def parse_command_line_arguments():
         default=None, help='Drake version as number, or date (for nightly snapshots) [default: the version specified in package.xml].'
     )
     parser.add_argument(
-        '-d', '--distro', type=str,
+        '-d', '--distro', type=str, choices=["bionic, focal"],
         default=None, help='Ubuntu disto [default: the distro detected by the build system][supported: bionic, focal].'
     )
     parser.add_argument(
