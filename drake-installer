@@ -217,7 +217,14 @@ def main():
         print(f"Removing an older version found at {args.install_dir}.")
         shutil.rmtree(args.install_dir)
     fetch_and_install(args.version, args.distro, args.install_dir)
-
+    result = check_installed_version(args.install_dir, args.verification_file)
+    # Sanity check
+    if result != InstalledVersionCompatibility.COMPATIBLE:
+        print(result.value)
+        print("Sanity Check: The installed VERSION.TXT does not match the stored")
+        print("VERSION.TXT used for verification purposes in this package, please check.")
+    else:
+        print("Sanity Check: ok")
     return 0
 
 
