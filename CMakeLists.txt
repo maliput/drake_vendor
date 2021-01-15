@@ -26,13 +26,14 @@ endif()
 
 # Hard fail if not found anywhere
 if (NOT drake_FOUND)
-  message(FATAL_ERROR "\
-=====================================================================\n\
-No drake installation was found.\n\
--Ddrake_DIR= can be used to pass a path to an existing drake installation.\n\
-Check http://drake.mit.edu/installation.html for further reference.\n\
-=====================================================================\n\
- ")
+  message(FATAL_ERROR 
+    " =====================================================================\n"
+    " No drake installation found.\n \n"
+    " Use -Ddrake_DIR= to point to an existing drake installation.\n"
+    " Use the drake-installer utility to install the required version.\n"
+    " See also http://drake.mit.edu/installation.html.\n"
+    " =====================================================================\n"
+  )
 endif()
 
 # Compute drake root knowing that ${drake_DIR} amounts to '${drake_ROOT}/lib/cmake/drake'
@@ -44,28 +45,28 @@ string(REPLACE " " ";" drake_VERSION_LIST ${drake_VERSION})
 list(GET drake_VERSION_LIST 0 drake_RELEASE_DATE)
 list(GET drake_VERSION_LIST 1 drake_RELEASE_COMMIT)
 
-file(READ "${PROJECT_SOURCE_DIR}/DRAKE_VERSION.txt" drake_EXPECTED_VERSION)
+file(READ "${PROJECT_SOURCE_DIR}/VERSION.TXT" drake_EXPECTED_VERSION)
 string(REPLACE " " ";" drake_EXPECTED_VERSION_LIST ${drake_EXPECTED_VERSION})
 list(GET drake_EXPECTED_VERSION_LIST 0 drake_EXPECTED_RELEASE_DATE)
 
 if("${drake_RELEASE_DATE}" LESS "${drake_EXPECTED_RELEASE_DATE}")
-  message(FATAL_ERROR "\
-=====================================================================\n\
-Found a drake installation but it is too old.\n\
-Check http://drake.mit.edu/installation.html to update it.\n\
-=====================================================================\
-")
+  message(FATAL_ERROR
+    " =====================================================================\n"
+    " Found a drake installation but it is too old.\n"
+    " Use the drake-installer utility to upgrade to the required version.\n"
+    " =====================================================================\n"
+  )
 endif()
 
 message(STATUS "Drake installation found at: ${drake_DIR}")
 
 if("${drake_RELEASE_DATE}" GREATER "${drake_EXPECTED_RELEASE_DATE}")
-  message(WARNING "\
-=====================================================================\n\
-Drake version found is newer than expected, proceed at your own risk.\n\
-Check TRI's dsim index repository for reference on supported versions.\n\
-=====================================================================\
-")
+  message(WARNING
+    " =====================================================================\n"
+    " The installed version of drake is newer than expected,\n"
+    " proceed at your own risk.\n"
+    " ====================================================================="
+  )
 endif()
 
 message(STATUS "Drake Root...................${drake_ROOT}")
@@ -75,9 +76,10 @@ message(STATUS "Drake Release Commmit........${drake_RELEASE_COMMIT}")
 ament_environment_hooks(cmake/drake-package_hook.sh.in)
 
 install(
-  PROGRAMS scripts/which_drake.sh
+  PROGRAMS
+    drake-installer
+    drake-version
   DESTINATION bin
-  RENAME which-drake
 )
 
 install(
@@ -86,12 +88,7 @@ install(
 )
 
 install(
-  FILES DRAKE_VERSION.txt
-  DESTINATION share
-)
-
-install(
-  DIRECTORY etc
+  FILES VERSION.TXT
   DESTINATION share
 )
 
