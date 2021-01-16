@@ -212,6 +212,7 @@ def install_drake_dependencies(install_dir: str, interactive: bool):
         "setup",
         "install_prereqs"
     )
+    print(f"Installing drake's dependencies via {prereqs_script}")
     if interactive:
         os.system(f"yes | sudo {prereqs_script}")
     else:
