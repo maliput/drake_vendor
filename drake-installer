@@ -12,8 +12,8 @@ import re
 import requests
 import shutil
 import sys
-import subprocess
 import tarfile
+import tempfile
 import traceback
 import urllib.request
 import xml.dom.minidom
@@ -191,15 +191,16 @@ def fetch_and_install(version: str, distro: str, install_dir: str):
     else:
         url = url_root + f"/nightly/drake-{version}-{distro}.tar.gz"
     tarball_filename = "/tmp/drake.tar.gz"
-    print(f"Fetching {url} and saving to {tarball_filename}")
-    r = requests.get(url)
-    open(tarball_filename, 'wb').write(r.content)
-    print(f"Extracting {tarball_filename} into {install_dir}")
-    tarball = tarfile.open(tarball_filename)
-    tarball.extractall(install_dir, strip_leading_drake_prefix(tarball))
-    tarball.close()
+    with tempfile.NamedTemporaryFile(suffix=".tar.gz") as tarball_tempfile:
+        print(f"Fetching {url} and saving to {tarball_tempfile.name}")
+        r = requests.get(url)
+        open(tarball_tempfile.name, 'wb').write(r.content)
+        print(f"Extracting {tarball_tempfile.name} into {install_dir}")
+        tarball = tarfile.open(tarball_tempfile.name)
+        tarball.extractall(install_dir, strip_leading_drake_prefix(tarball))
+        tarball.close()
 
-def install_drake_dependencies(install_dir: str):
+def install_drake_dependencies(install_dir: str, interactive: bool):
     """
     Until dependencies are conveniently enumeratied in package.xml, handle
     installation of these here.
@@ -211,7 +212,10 @@ def install_drake_dependencies(install_dir: str):
         "setup",
         "install_prereqs"
     )
-    os.system(f"yes | sudo {prereqs_script}")
+    if interactive:
+        os.system(f"yes | sudo {prereqs_script}")
+    else:
+        os.system(f"sudo {prereqs_script}")
 
 ################################################################################
 # EntryPoint
@@ -251,7 +255,7 @@ def main():
     else:
         print("Sanity Check: ok")
     
-    install_drake_dependencies(args.install_dir)
+    install_drake_dependencies(args.install_dir, args.interactive)
 
     return 0
 
