@@ -42,7 +42,7 @@ def parse_command_line_arguments():
     )
     parser.add_argument(
         '-i', '--install_dir', type=str,
-        default='/opt/drake', help='Installation directory [default: /opt/drake].'
+        default='None', help='Installation directory [default: /opt/drake/<version>].'
     )
     return parser.parse_args()
 
@@ -69,11 +69,23 @@ def populate_unconfigured_arguments(args):
 
         package_xml = xml.dom.minidom.parse(package_xml_path)
         args.version = package_xml.getElementsByTagName("version")[0].firstChild.nodeValue
-        # If it's a major.minor.patch triplet, it's a drake versioned release, nothing to do
-        # If it's a 0.0.yyyymmdd triplet, it's a nightly snapshot release, strip the leading zeroes
-        args.version = args.version.replace('0.0.', '')
-        
+        #
+        # Drake is distributing two kinds of binary
+        #  - Official releases, versioned semantically with a major.minor.patch number
+        #  - Nightly snapshots, which are represent via a major.minor.yyyymmdd number
+        #
+        # Ament will complain if anything but a semantic version number is used (this
+        # rules out, e.g. 20200613 as a possible choice of format for the version element).
+        # Subsequently, overloading the patch number is not ideal, but a reasonable
+        # option given that drake doesn't distribute patched releases yet, and if it does
+        # so, the reliance on nightly snapshots can be deprecated.
+        patch_version = args.version.split('.')[2]
+        if len(patch_version) == 8:
+            args.version = patch_version
     
+    if args.version is None:
+        args.version = "/opt/drake"
+
     if args.distro is None:
         with open("/etc/os-release", 'r') as file:
             contents = file.read()
