@@ -42,7 +42,7 @@ def parse_command_line_arguments():
     )
     parser.add_argument(
         '-i', '--install_dir', type=str,
-        default='None', help='Installation directory [default: /opt/drake/<version>].'
+        default=None, help='Installation directory [default: /opt/drake/<version>].'
     )
     return parser.parse_args()
 
@@ -82,9 +82,9 @@ def populate_unconfigured_arguments(args):
         patch_version = args.version.split('.')[2]
         if len(patch_version) == 8:
             args.version = patch_version
-    
-    if args.version is None:
-        args.version = "/opt/drake"
+
+    if args.install_dir is None:
+        args.install_dir = "/opt/drake"
 
     if args.distro is None:
         with open("/etc/os-release", 'r') as file:
@@ -197,6 +197,9 @@ def fetch_and_install(version: str, distro: str, install_dir: str):
     tarball = tarfile.open(tarball_filename)
     tarball.extractall(install_dir, strip_leading_drake_prefix(tarball))
     tarball.close()
+
+def install_drake_dependencies():
+    pass
 
 ################################################################################
 # EntryPoint
