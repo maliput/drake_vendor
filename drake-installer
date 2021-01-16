@@ -12,6 +12,7 @@ import re
 import requests
 import shutil
 import sys
+import subprocess
 import tarfile
 import traceback
 import urllib.request
@@ -198,8 +199,19 @@ def fetch_and_install(version: str, distro: str, install_dir: str):
     tarball.extractall(install_dir, strip_leading_drake_prefix(tarball))
     tarball.close()
 
-def install_drake_dependencies():
-    pass
+def install_drake_dependencies(install_dir: str):
+    """
+    Until dependencies are conveniently enumeratied in package.xml, handle
+    installation of these here.
+    """
+    prereqs_script = os.path.join(
+        install_dir,
+        "share",
+        "drake",
+        "setup",
+        "install_prereqs"
+    )
+    os.system(f"yes | sudo {prereqs_script}")
 
 ################################################################################
 # EntryPoint
@@ -214,8 +226,7 @@ def main():
     if args.check_only:
         return 0
     if result == InstalledVersionCompatibility.COMPATIBLE:
-        # nothing to do
-        return 0
+        return 0  # nothing to do
     if result == InstalledVersionCompatibility.NOT_DRAKE:
         print(f"A non-drake presence was found at {args.install_dir}, aborting.")
         return 1
@@ -233,13 +244,15 @@ def main():
         shutil.rmtree(args.install_dir)
     fetch_and_install(args.version, args.distro, args.install_dir)
     result = check_installed_version(args.install_dir, args.verification_file)
-    # Sanity check
     if result != InstalledVersionCompatibility.COMPATIBLE:
         print(result.value)
         print("Sanity Check: The installed VERSION.TXT does not match the stored")
         print("VERSION.TXT used for verification purposes in this package, please check.")
     else:
         print("Sanity Check: ok")
+    
+    install_drake_dependencies(args.install_dir)
+
     return 0
 
 
