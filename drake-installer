@@ -85,7 +85,7 @@ def populate_unconfigured_arguments(args):
             args.version = patch_version
 
     if args.install_dir is None:
-        args.install_dir = "/opt/drake"
+        args.install_dir = os.path.join("/", "opt", "drake", args.version)
 
     if args.distro is None:
         with open("/etc/os-release", 'r') as file:
