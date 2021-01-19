@@ -93,6 +93,7 @@ if (DEFINED ENV{DRAKE_INSTALL_PREFIX})
 else()
   set(drake_DIR "/opt/drake/${VERSION}")
 endif()
+set(drake_VERSION ${${PROJECT_NAME}_VERSION})
 
 message(STATUS "Drake install directory.....${drake_DIR}")
 

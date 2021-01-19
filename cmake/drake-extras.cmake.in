@@ -12,3 +12,6 @@ find_library(isInstalled NAMES ignition-math6)
   endif()
 
 find_package(drake REQUIRED PATHS @drake_DIR@)
+
+# Drake does not set it's own version yet
+set(drake_VERSION "@drake_VERSION@" CACHE STRING "Drake version.")
