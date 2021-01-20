@@ -37,7 +37,7 @@ set(drake_VERSION ${${PROJECT_NAME}_VERSION})
 file(READ "${PROJECT_SOURCE_DIR}/VERSION.TXT" drake_EXPECTED_VERSION)
 string(REPLACE " " ";" drake_EXPECTED_VERSION_LIST ${drake_EXPECTED_VERSION})
 list(GET drake_EXPECTED_VERSION_LIST 0 drake_EXPECTED_RELEASE_DATE)
-list(GET drake_VERSION_LIST 1 drake_EXPECTED_RELEASE_COMMIT)
+list(GET drake_EXPECTED_VERSION_LIST 1 drake_EXPECTED_RELEASE_COMMIT)
 
 ################################################################################
 # Configuration Reporting
