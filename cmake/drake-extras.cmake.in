@@ -17,9 +17,9 @@ find_package(drake PATHS @drake_DIR@)
 if (NOT drake_FOUND)
   message(FATAL_ERROR 
     " =====================================================================\n"
-    " No drake installation found at @drake_DIR@.\n \n"
-    " Use the drake-installer utility to install the required version.\n"
-    " See also http://drake.mit.edu/installation.html.\n"
+    " No working drake installation found at @drake_DIR@.\n \n"
+    " If none exists, use the drake-installer utility to install the\n"
+    " required version. See also http://drake.mit.edu/installation.html.\n"
     " =====================================================================\n"
   )
 endif()
