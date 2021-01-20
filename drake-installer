@@ -15,7 +15,6 @@ import sys
 import tarfile
 import tempfile
 import traceback
-import urllib.request
 import xml.dom.minidom
 
 ################################################################################
