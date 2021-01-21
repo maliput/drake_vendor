@@ -15,7 +15,7 @@
 - ...
 
 
-## 0.18.20206013-1 - 2021-01-19
+## 0.18.202006013-1 - 2021-01-19
 
 ### API changes
 - Versioned installation in /opt/drake/<version>, [PR #23](https://github.com/ToyotaResearchInstitute/drake-vendor/pull/23)

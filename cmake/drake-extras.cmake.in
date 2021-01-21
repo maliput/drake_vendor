@@ -24,7 +24,7 @@ if (NOT drake_FOUND)
   )
 endif()
 
-# Drake does not set it's own version yet
+# Drake does not set its own version yet
 set(drake_VERSION "@drake_VERSION@" CACHE STRING "Drake version.")
 
 # Verification data

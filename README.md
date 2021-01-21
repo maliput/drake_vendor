@@ -79,10 +79,11 @@ with the following steps to ensure `drake_vendor` is aware of it:
 
 ### The drake-installer Utility
 
-A utility exists to assist with installing/upgrading drake and it's dependencies. Prior
-to any installation/upgrade, it checks to see if a compatible version is already installed.
-Post installation/upgrade, it will sanity check the newly installed version to check that it
-matches against the `VERSION.TXT` stored in this repo.
+A utility exists to assist with installing/upgrading drake and its dependencies. Prior
+to any installation/upgrade, it checks to see if a compatible version (provided via
+the --version argument) is already installed. Post installation/upgrade, it will sanity
+check the newly installed version to check that it matches against the `VERSION.TXT`
+stored in this repo.
 
 ```bash
 $ sudo ./drake-installer --help
