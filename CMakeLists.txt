@@ -1,68 +1,61 @@
 cmake_minimum_required(VERSION 3.5)
 
+################################################################################
+# CMake
+################################################################################
+
 project(drake_vendor)
+
+################################################################################
+# Dependencies
+################################################################################
 
 find_package(ament_cmake_core REQUIRED)
 
-find_package(drake QUIET)
+################################################################################
+# Configuration
+################################################################################
 
-if (NOT drake_FOUND)
-  set(drake_DIR "/opt/drake")
-  if (DEFINED ENV{DRAKE_INSTALL_PREFIX})
-    set(drake_DIR "$ENV{DRAKE_INSTALL_PREFIX}")
-  endif()
-
-  message(STATUS "Looking for a drake installation at ${drake_DIR}")
-  find_package(drake QUIET PATHS ${drake_DIR})
-
-  if (NOT drake_FOUND)
-    message(FATAL_ERROR "\
-=====================================================================\n\
-No drake installation was found.\n\
--Ddrake_DIR= can be used to pass a path to an existing drake installation.\n\
-Check http://drake.mit.edu/installation.html for further reference.\n\
-=====================================================================\n\
- ")
-  endif()
+ament_package_xml()
+string(REPLACE "." ";" SEMANTIC_VERSION ${${PROJECT_NAME}_VERSION})
+list(GET SEMANTIC_VERSION 0 MAJOR_VERSION)
+list(GET SEMANTIC_VERSION 1 MINOR_VERSION)
+list(GET SEMANTIC_VERSION 2 PATCH_VERSION)
+string(LENGTH ${PATCH_VERSION} PATCH_LENGTH)
+if(${PATCH_LENGTH} STREQUAL "8")
+  set(VERSION ${PATCH_VERSION})
+else()
+  set(VERSION ${${PROJECT_NAME}_VERSION})
 endif()
+if (DEFINED ENV{DRAKE_INSTALL_PREFIX})
+  set(drake_DIR "$ENV{DRAKE_INSTALL_PREFIX}")
+else()
+  set(drake_DIR "/opt/drake/${VERSION}")
+endif()
+set(drake_VERSION ${${PROJECT_NAME}_VERSION})
 
-# Compute drake root knowing that ${drake_DIR} amounts to '${drake_ROOT}/lib/cmake/drake'
-set(drake_ROOT "${drake_DIR}/../../..")
-
-file(READ "${drake_ROOT}/share/doc/drake/VERSION.TXT" drake_VERSION)
-string(REPLACE " " ";" drake_VERSION_LIST ${drake_VERSION})
-list(GET drake_VERSION_LIST 0 drake_RELEASE_DATE)
-
-file(READ "${PROJECT_SOURCE_DIR}/DRAKE_VERSION.txt" drake_EXPECTED_VERSION)
+file(READ "${PROJECT_SOURCE_DIR}/VERSION.TXT" drake_EXPECTED_VERSION)
 string(REPLACE " " ";" drake_EXPECTED_VERSION_LIST ${drake_EXPECTED_VERSION})
 list(GET drake_EXPECTED_VERSION_LIST 0 drake_EXPECTED_RELEASE_DATE)
+list(GET drake_EXPECTED_VERSION_LIST 1 drake_EXPECTED_RELEASE_COMMIT)
 
-if("${drake_RELEASE_DATE}" LESS "${drake_EXPECTED_RELEASE_DATE}")
-  message(FATAL_ERROR "\
-=====================================================================\n\
-Found a drake installation but it is too old.\n\
-Check http://drake.mit.edu/installation.html to update it.\n\
-=====================================================================\
-")
-endif()
+################################################################################
+# Configuration Reporting
+################################################################################
 
-message(STATUS "Drake installation found at: ${drake_DIR}")
+message(STATUS "Drake Install Dir............${drake_DIR}")
+message(STATUS "Drake Release Date...........${drake_EXPECTED_RELEASE_DATE}")
+message(STATUS "Drake Release Commmit........${drake_EXPECTED_RELEASE_COMMIT}")
 
-if("${drake_RELEASE_DATE}" GREATER "${drake_EXPECTED_RELEASE_DATE}")
-  message(WARNING "\
-=====================================================================\n\
-Drake version found is newer than expected, proceed at your own risk.\n\
-Check TRI's dsim index repository for reference on supported versions.\n\
-=====================================================================\
-")
-endif()
-
-ament_environment_hooks(cmake/drake-package_hook.sh.in)
+################################################################################
+# Installation
+################################################################################
 
 install(
-  PROGRAMS scripts/which_drake.sh
+  PROGRAMS
+    drake_installer
+    drake_version
   DESTINATION bin
-  RENAME which-drake
 )
 
 install(
@@ -71,13 +64,9 @@ install(
 )
 
 install(
-  FILES DRAKE_VERSION.txt
+  FILES VERSION.TXT
   DESTINATION share
 )
 
-install(
-  DIRECTORY etc
-  DESTINATION share
-)
-
+ament_environment_hooks(cmake/drake-package_hook.sh.in)
 ament_package(CONFIG_EXTRAS cmake/drake-extras.cmake.in)

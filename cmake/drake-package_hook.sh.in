@@ -1,4 +1,4 @@
-ament_prepend_unique_value DRAKE_RESOURCE_ROOT "${DRAKE_INSTALL_PREFIX-@drake_ROOT@}/share"
-ament_prepend_unique_value PYTHONPATH "${DRAKE_INSTALL_PREFIX-@drake_ROOT@}/lib/python3.6/site-packages"
-ament_prepend_unique_value LD_LIBRARY_PATH "${DRAKE_INSTALL_PREFIX-@drake_ROOT@}/lib"
-ament_prepend_unique_value PATH "${DRAKE_INSTALL_PREFIX-@drake_ROOT@}/bin"
+ament_prepend_unique_value DRAKE_RESOURCE_ROOT "${DRAKE_INSTALL_PREFIX-@drake_DIR@}/share"
+ament_prepend_unique_value PYTHONPATH "${DRAKE_INSTALL_PREFIX-@drake_DIR@}/lib/python3.6/site-packages"
+ament_prepend_unique_value LD_LIBRARY_PATH "${DRAKE_INSTALL_PREFIX-@drake_DIR@}/lib"
+ament_prepend_unique_value PATH "${DRAKE_INSTALL_PREFIX-@drake_DIR@}/bin"

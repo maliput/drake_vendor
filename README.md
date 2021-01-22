@@ -2,27 +2,26 @@
 
 ## Overview
 
-`drake_vendor` is an ament cmake shim for `drake`, easing its use in a `colcon` workspace
-whether `drake` sources are part of the build or a binary distribution has been installed
-on the system.
+`drake_vendor` is an ament cmake shim for a binary installation of `drake`,
+easing its use in a `colcon` workspace.
 
-Upon CMake configuration, an attempt is made to find an existing `drake` installation. If
-it's not found, the build will fail. If it's found, its `VERSION.txt` file is matched against
-the expected [`DRAKE_VERSION.txt`](DRAKE_VERSION.txt) file. Only exact matches result in silent
-success. Older versions will result in an error while newer versions will result in a warning.
+## Basic Usage - Depending on Drake
 
-In addition to this functionality, a [prerequisites script](prereqs) is available to automate
-the installation of binary `drake` nightly distributions. First, an attempt is made to find an
-existing `drake` installation at the path specified by the `DRAKE_INSTALL_PREFIX` environment
-variable, falling back to `/opt/drake` if the latter is not defined.
-If it's found and it's either an exact match with the expected version or a newer one, no
-installation is carried out. If it's found and it's an older version, the expected version is
-installed in replacement of the previously found one. If it's not found, the expected version is
-installed. After `drake` is installed, a sanity check is performed to ensure that the installed
-version is exactly the version specified in [`DRAKE_VERSION.txt`](DRAKE_VERSION.txt) (and thus
-the version we attempted to install in the first place).
+Make sure drake is installed with the version specified in `drake_vendor/package.xml`
+(this requires `drake_vendor` itself to have been installed already):
 
-## How to use it
+```bash
+sudo drake_installer
+```
+
+Mark a dependency on `drake_vendor` in downstream's `package.xml`:
+
+```xml
+<build_depend>drake_vendor</build_depend>
+```
+
+Look for `drake_vendor` via CMake and use drake's imported targets as dependencies for
+your libraries/applications.
 
 ```cmake
 find_package(drake_vendor REQUIRED)
@@ -36,28 +35,80 @@ target_link_libraries(my_lib
 )
 ```
 
-Note that upon a `find_package(drake_vendor)` invocation, `drake` imported targets 
-are exposed so as to make it equivalent to a `find_package(drake)` invocation.
+## Detailed Information
 
-## How to check the target Drake version
+The version to be installed/upgraded is specified in the version element of `package.xml`.
+It may be either a semantically versioned release (e.g. 0.18.0) or a nightly snapshot 
+(0.18.20200613). Semantically versioned releases are preferred since the drake team makes
+no guarantees that nightly snapshots will be eternally available.
 
-After entering your workspace, building it, and executing `source ./install/setup.bash`, run:
+A verification file, `VERSION.TXT` is also provided to check that any installed version
+matches the version specified in `package.xml`. This is used by both the `drake_installer`
+utility for a post-installation check and the exported `drake_vendor` cmake modules to
+verify the discovered drake is the correct version. This verification file will be
+deprecated when the drake binary installation can advertise it's semantic version itself
+(see [drake#14509](https://github.com/RobotLocomotion/drake/issues/14509).
+
+## Advanced Usage
+
+### Specifying a Different Version
+
+* Fork/branch `drake_vendor`
+* Include your fork/branch of `drake_vendor` in your workspace
+* Update the version in `drake_vendor/package.xml`
+  * Use `major.minor.patch` for a semantically versioned release, e.g. `0.18.0`
+  * Use `major.minor.yyyymmdd` for a nightly snapshot release, e.g. `0.18.20200613`
+* Update the verification file `VERSION.TXT` with the version file from the release
+* Build and install `drake_vendor`
+* Execute `sudo drake_installer`, this will install to `/opt/drake/<your-new-version>`
+* Be froody
+
+### Redirecting to A Different Install Location
+
+If you've installed drake to a location other than `/opt/drake/<version>`, then proceed
+with the following steps to ensure `drake_vendor` is aware of it:
+
+* Ensure your installed version matches the version in `drake_vendor/package.xml`
+  * See above if you need to use a different version
+* Include `drake_vendor` in your workspace
+* Export the environment variable `DRAKE_INSTALL_PREFIX` to point at your installation
+* Build and install `drake_vendor`
+* Downstream packages should now discover drake correctly
+
+## Utilities
+
+### The drake_installer Utility
+
+A utility exists to assist with installing/upgrading drake and its dependencies. Prior
+to any installation/upgrade, it checks to see if a compatible version (provided via
+the --version argument) is already installed. Post installation/upgrade, it will sanity
+check the newly installed version to check that it matches against the `VERSION.TXT`
+stored in this repo.
+
+```bash
+$ sudo ./drake_installer --help
+
+# Install with defaults:
+#  Version: as specified in package.xml
+#  Install directory: /opt/drake/<version>
+#  Distro: as specified by /etc/os-release
+$ sudo ./drake_installer
+Installation Details
+  Drake Version................20200613
+  Ubuntu Distro................bionic
+  Verification File............/home/snorri/workspace/src/drake_vendor/VERSION.TXT
+  Installation Directory......./opt/drake
+  Existing Installation........UNINSTALLED
+Fetching https://drake-packages.csail.mit.edu/drake/nightly/drake-20200613-bionic.tar.gz and saving to /tmp/drake.tar.gz
+Extracting /tmp/drake.tar.gz into /opt/drake
+```
+
+## The drake_version Utility
+
+Another utility is provided to quickly return the contents of the installed drake's
+`VERSION.TXT` file:
 
 ```
-which-drake
+$ drake_version
+20200613074556 8d92fae6584f237e5d0989653c0b5915387444bf
 ```
-
-## How to change the target Drake version
-
-1. Select a Drake SHA that you would like to use. Ensure it is the last commit
-   of a nightly release, see
-   [nightly build](https://drake-jenkins.csail.mit.edu/view/Nightly%20Production/).
-2. In your local clone of `drake_vendor`, update `drake_version.txt` to match the 
-   chosen commit date SHA.
-3. Re-install `drake_vendor` prerequisites in your workspace:
-   
-   ```sh
-   sudo prereqs-install -t all path/to/drake_vendor
-   ```
-
-4. Open a PR with the change into this repository and merge it into master.

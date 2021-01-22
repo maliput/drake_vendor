@@ -1,0 +1,269 @@
+#! /usr/bin/env python3
+
+################################################################################
+# Imports
+################################################################################
+
+import argparse
+import enum
+import filecmp
+import os
+import re
+import requests
+import shutil
+import sys
+import tarfile
+import tempfile
+import traceback
+import xml.dom.minidom
+
+################################################################################
+# Argument Parsing
+################################################################################
+
+def parse_command_line_arguments():
+    parser = argparse.ArgumentParser(
+        description='Drake installation tool',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument('--interactive', action='store_true', help='interactively seek user confirmation if an upgrade is required')
+    parser.add_argument('-c', '--check-only', action='store_true', help='check for an existing installation only')
+    parser.add_argument(
+        '-f', '--verification_file', type=str,
+        default=None, help='Drake version file for verification [default: drake_vendor/VERSION.TXT].'
+    )
+    parser.add_argument(
+        '-v', '--version', type=str,
+        default=None, help='Drake version as number, or date (for nightly snapshots) [default: the version specified in package.xml].'
+    )
+    parser.add_argument(
+        '-d', '--distro', type=str, choices=["bionic, focal"],
+        default=None, help='Ubuntu disto [default: the distro detected by the build system][supported: bionic, focal].'
+    )
+    parser.add_argument(
+        '-i', '--install_dir', type=str,
+        default=None, help='Installation directory [default: /opt/drake/<version>].'
+    )
+    return parser.parse_args()
+
+def populate_unconfigured_arguments(args):
+    if args.version is None:
+        local_package_xml_path =  os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "package.xml"
+        )
+        # Could use ament_index_python, but this is robust to sudo and
+        # ament_index_python does not profer any other advantage
+        installed_package_xml_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+            "share",
+            "drake_vendor",
+            "package.xml"
+        )
+        if os.path.isfile(local_package_xml_path):
+            package_xml_path = local_package_xml_path
+        elif os.path.isfile(installed_package_xml_path):
+            package_xml_path = installed_package_xml_path
+        else:
+            raise FileNotFoundError(f"Could not find drake_vendor's package.xml")
+
+        package_xml = xml.dom.minidom.parse(package_xml_path)
+        args.version = package_xml.getElementsByTagName("version")[0].firstChild.nodeValue
+        #
+        # Drake is distributing two kinds of binary
+        #  - Official releases, versioned semantically with a major.minor.patch number
+        #  - Nightly snapshots, which are represent via a major.minor.yyyymmdd number
+        #
+        # Ament will complain if anything but a semantic version number is used (this
+        # rules out, e.g. 20200613 as a possible choice of format for the version element).
+        # Subsequently, overloading the patch number is not ideal, but a reasonable
+        # option given that drake doesn't distribute patched releases yet, and if it does
+        # so, the reliance on nightly snapshots can be deprecated.
+        patch_version = args.version.split('.')[2]
+        if len(patch_version) == 8:
+            args.version = patch_version
+
+    if args.install_dir is None:
+        args.install_dir = os.path.join("/", "opt", "drake", args.version)
+
+    if args.distro is None:
+        with open("/etc/os-release", 'r') as file:
+            contents = file.read()
+            if "bionic" in contents:
+                args.distro = "bionic"
+            elif "focal" in contents:
+                args.distro = "focal"
+            else:
+                raise RuntimeError("Unsupported distro, must be one of [bionic, focal]")
+
+    if args.verification_file is None:
+        local_verification_file_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "VERSION.TXT"
+        )
+        installed_verification_file_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+            "share",
+            "drake_vendor",
+            "VERSION.TXT"
+        )
+        if os.path.isfile(local_verification_file_path):
+            args.verification_file = local_verification_file_path
+        elif os.path.isfile(installed_verification_file_path):
+            args.verification_file = installed_verification_file_path
+        else:
+            raise FileNotFoundError(f"Could not find drake_vendor's VERSION.TXT")
+
+def print_arguments(args):
+    print("Installation Details")
+    print(f"  Drake Version................{args.version}")
+    print(f"  Ubuntu Distro................{args.distro}")
+    print(f"  Verification File............{args.verification_file}")
+    print(f"  Installation Directory.......{args.install_dir}")
+
+################################################################################
+# Verification
+################################################################################
+
+class InstalledVersionCompatibility(enum.Enum):
+    UNINSTALLED = "UNINSTALLED"
+    COMPATIBLE = "COMPATIBLE"
+    NOT_DRAKE = "NOT_DRAKE"
+    NEWER = "NEWER"
+    OLDER = "OLDER"
+
+def check_installed_version(
+        install_dir:str,
+        verification_file
+    ) -> InstalledVersionCompatibility:
+    installed_verification_file = os.path.join(
+        install_dir,
+        "share",
+        "doc",
+        "drake",
+        "VERSION.TXT"
+        )
+    if not os.path.isdir(install_dir):
+        return InstalledVersionCompatibility.UNINSTALLED
+    if not os.path.isfile(installed_verification_file):
+        return InstalledVersionCompatibility.NOT_DRAKE
+    if filecmp.cmp(verification_file, installed_verification_file, shallow=False):
+        return InstalledVersionCompatibility.COMPATIBLE
+    with open(verification_file) as f:
+        verification_datetime = f.read().split()[0]
+    with open(installed_verification_file) as f:
+        installed_datetime = f.read().split()[0]
+    if verification_datetime > installed_datetime:
+        return InstalledVersionCompatibility.OLDER
+    else:
+        return InstalledVersionCompatibility.NEWER
+
+################################################################################
+# Installation
+################################################################################
+
+def is_semantic_version(version: str) -> bool:
+    """
+    Distinguishes what kind of version string it is.
+
+    Args:
+        version: the version string, either major.minor.patch or yyyymmdd nightly snapshot version
+    Returns
+        True if the version is a major.minor.patch version
+    """
+    if re.match("[0-9]+\.[0-9]+\.[0-9]+", version) is not None:
+        return True
+    return False
+
+def strip_leading_drake_prefix(tarball: tarfile.TarFile):
+    prefix = "drake/"
+    offset = len(prefix)
+    for tarinfo in tarball.getmembers():
+        if tarinfo.name.startswith(prefix):
+            tarinfo.name = tarinfo.name[offset:]
+            yield tarinfo
+
+def fetch_and_install(version: str, distro: str, install_dir: str):
+    url_root = "https://drake-packages.csail.mit.edu/drake"
+    if is_semantic_version(version):
+        url = url_root + f"/release/drake-{version}-{distro}.tar.gz"
+    else:
+        url = url_root + f"/nightly/drake-{version}-{distro}.tar.gz"
+    tarball_filename = "/tmp/drake.tar.gz"
+    with tempfile.NamedTemporaryFile(suffix=".tar.gz") as tarball_tempfile:
+        print(f"Fetching {url} and saving to {tarball_tempfile.name}")
+        r = requests.get(url)
+        open(tarball_tempfile.name, 'wb').write(r.content)
+        print(f"Extracting {tarball_tempfile.name} into {install_dir}")
+        tarball = tarfile.open(tarball_tempfile.name)
+        tarball.extractall(install_dir, strip_leading_drake_prefix(tarball))
+        tarball.close()
+
+def install_drake_dependencies(install_dir: str, interactive: bool):
+    """
+    Until dependencies are conveniently enumeratied in package.xml, handle
+    installation of these here.
+    """
+    prereqs_script = os.path.join(
+        install_dir,
+        "share",
+        "drake",
+        "setup",
+        "install_prereqs"
+    )
+    print(f"Installing drake's dependencies via {prereqs_script}")
+    if interactive:
+        os.system(f"sudo {prereqs_script}")
+    else:
+        os.system(f"yes | sudo {prereqs_script}")
+
+################################################################################
+# EntryPoint
+################################################################################
+
+def main():
+    args = parse_command_line_arguments()
+    populate_unconfigured_arguments(args)
+    print_arguments(args)
+    result = check_installed_version(args.install_dir, args.verification_file)
+    print(f"  Existing Installation........{result.value}")
+    if args.check_only:
+        return 0
+    if result == InstalledVersionCompatibility.COMPATIBLE:
+        return 0  # nothing to do
+    if result == InstalledVersionCompatibility.NOT_DRAKE:
+        print(f"A non-drake presence was found at {args.install_dir}, aborting.")
+        return 1
+    if result == InstalledVersionCompatibility.NEWER:
+        print(f"Found a newer version of drake, proceed at your own risk.")
+        return 1
+    if result == InstalledVersionCompatibility.OLDER:
+        if args.interactive:
+            print("Found an older version of drake, upgrade? [Y/n] ")
+            confirm = input()
+            if confirm not in ['Y', 'y', '']:
+                print(f"Please upgrade manually or point to a different root to proceed.")
+                return 1
+        print(f"Removing an older version found at {args.install_dir}.")
+        shutil.rmtree(args.install_dir)
+    fetch_and_install(args.version, args.distro, args.install_dir)
+    result = check_installed_version(args.install_dir, args.verification_file)
+    if result != InstalledVersionCompatibility.COMPATIBLE:
+        print(result.value)
+        print("Sanity Check: The installed VERSION.TXT does not match the stored")
+        print("VERSION.TXT used for verification purposes in this package, please check.")
+    else:
+        print("Sanity Check: ok")
+    
+    install_drake_dependencies(args.install_dir, args.interactive)
+
+    return 0
+
+
+if __name__ == '__main__':
+    try:
+        sys.exit(main())
+    except Exception as e:
+        print(str(e))
+        traceback.print_exc()
+        sys.exit(1)

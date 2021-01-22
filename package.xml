@@ -4,15 +4,19 @@
   schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>drake_vendor</name>
-  <version>1.0.0</version>
-  <description>CMake shim over the drake library.</description>
+  <!--
+    Use major.minor.patch for a semantically versioned release, e.g. 1.25.0
+    Use major.minor.yyyymmdd for a nightly snapshot release, e.g. 1.25.20200613
+  -->
+  <version>0.18.20200613</version>
+  <description>Ament-CMake shim over the drake library.</description>
   <maintainer email="daniel.stonier@tri.global">Daniel Stonier</maintainer>
   <license file="LICENSE">BSD 3-Clause</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_export_depend>ament_cmake</buildtool_export_depend>
 
-  <depend>protobuf-dev</depend>
+  <exec_depend>python3-requests</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

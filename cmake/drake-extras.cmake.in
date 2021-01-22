@@ -1,14 +1,59 @@
+
 # Drake brings ignition math 6 but cmake machinery is not the same, leading to problems
 # when trying to find the specific targets of that component. Code below makes sure that
 # cmake ignores drake's version of the library and looks for it in the default system directory only 
 # when there is another ignition math 6 library besides the one that drakes brings.
-get_filename_component(DRAKE_ROOT @drake_ROOT@ REALPATH)
 set(CMAKE_IGNORE_PATH_BACKUP "${CMAKE_IGNORE_PATH}")
-set(CMAKE_IGNORE_PATH "${CMAKE_IGNORE_PATH};${DRAKE_ROOT}/lib/cmake/ignition-math6/")
+set(CMAKE_IGNORE_PATH "${CMAKE_IGNORE_PATH};@drake_DIR@/lib/cmake/ignition-math6/")
 
 find_library(isInstalled NAMES ignition-math6)
   if(${isInstalled} STREQUAL "isInstalled-NOTFOUND")
     set(CMAKE_IGNORE_PATH "${CMAKE_IGNORE_PATH_BACKUP}")
   endif()
 
-find_package(drake REQUIRED PATHS @drake_DIR@)
+# Don't use REQUIRED here, we throw with more informative error messages below.
+find_package(drake PATHS @drake_DIR@)
+
+if (NOT drake_FOUND)
+  message(FATAL_ERROR 
+    " =====================================================================\n"
+    " No working drake installation found at @drake_DIR@.\n \n"
+    " If none exists, use the drake_installer utility to install the\n"
+    " required version. See also http://drake.mit.edu/installation.html.\n"
+    " =====================================================================\n"
+  )
+endif()
+
+# Drake does not set its own version yet
+set(drake_VERSION "@drake_VERSION@" CACHE STRING "Drake version.")
+
+# Verification data
+set(drake_EXPECTED_RELEASE_DATE @drake_EXPECTED_RELEASE_DATE@)
+set(drake_EXPECTED_RELEASE_COMMIT @drake_EXPECTED_RELEASE_COMMIT@)
+
+file(READ "@drake_DIR@/share/doc/drake/VERSION.TXT" drake_VERSION)
+string(REPLACE " " ";" drake_VERSION_LIST ${drake_VERSION})
+list(GET drake_VERSION_LIST 0 drake_RELEASE_DATE)
+list(GET drake_VERSION_LIST 1 drake_RELEASE_COMMIT)
+
+if("${drake_RELEASE_DATE}" LESS "${drake_EXPECTED_RELEASE_DATE}")
+  message(FATAL_ERROR
+    " =====================================================================\n"
+    " ${drake_RELEASE_DATE} < ${drake_EXPECTED_RELEASE_DATE}\n"
+    " Found an older drake installation at @drake_DIR@.\n \n"
+    " Use the drake_installer utility to upgrade or re-install.\n"
+    " =====================================================================\n"
+  )
+endif()
+
+if("${drake_RELEASE_DATE}" GREATER "${drake_EXPECTED_RELEASE_DATE}")
+  message(FATAL_ERROR
+    " =====================================================================\n"
+    " ${drake_RELEASE_DATE} > ${drake_EXPECTED_RELEASE_DATE}\n"
+    " Found a newer drake installation at @drake_DIR@.\n \n"
+    " Use drake_vendor with env variable DRAKE_INSTALL_PREFIX to redirect\n"
+    " OR the drake_installer utility to reinstall.\n"
+    " ====================================================================="
+  )
+endif()
+

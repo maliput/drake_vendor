@@ -9,76 +9,15 @@ prereqs.init 'The drake vendor source distribution prerequisites script'
 prereqs.assert_sudo
 
 if prereqs.tag_applies "drake|all"; then
-    DRAKE_INSTALL_PREFIX=${DRAKE_INSTALL_PREFIX:-/opt/drake}
-
-    DRAKE_VENDOR_PREREQS_DIRPATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P)"
-
-    function install_prereqs() {
-        if ! prereqs.interactive; then
-            yes | ${DRAKE_INSTALL_PREFIX}/share/drake/setup/install_prereqs
-        else
-            ${DRAKE_INSTALL_PREFIX}/share/drake/setup/install_prereqs
-        fi
-    }
-
-    # Retrieve expected commit SHA and release date.
-    EXPECTED_DRAKE_VERSION_FILE="${DRAKE_VENDOR_PREREQS_DIRPATH}/DRAKE_VERSION.txt"
-    read -r EXPECTED_DRAKE_RELEASE_DATE EXPECTED_DRAKE_VERSION <<< "$(cat ${EXPECTED_DRAKE_VERSION_FILE})"
-
-    # Look for an existing installation.
-    INSTALLED_DRAKE_VERSION_FILE="${DRAKE_INSTALL_PREFIX}/share/doc/drake/VERSION.TXT"
-    if [ -d "${DRAKE_INSTALL_PREFIX}" ]; then
-        if [ ! -f "${INSTALLED_DRAKE_VERSION_FILE}" ]; then
-            prereqs.die "${DRAKE_INSTALL_PREFIX} is not empty and it's not a drake installation"
-        fi
-        # Retrieve installed commit SHA and release date.
-        read -r INSTALLED_DRAKE_RELEASE_DATE INSTALLED_DRAKE_VERSION <<< "$(cat ${INSTALLED_DRAKE_VERSION_FILE})"
-
-        # Leave if the version of the existing drake installation is not older than expected.
-        # It is assumed that if the release date matches, the commit SHA will match too.
-        if [ "${INSTALLED_DRAKE_RELEASE_DATE}" -ge "${EXPECTED_DRAKE_RELEASE_DATE}" ]; then
-            # Install drake installation prerequisites anyways.
-            install_prereqs
-            prereqs.done
-        fi
-
-        if prereqs.interactive; then
-            # Prompt the user before updating the existing installation.
-            read -p "Found an old drake installation at '${DRAKE_INSTALL_PREFIX}' (${INSTALLED_DRAKE_RELEASE_DATE}:${INSTALLED_DRAKE_VERSION:0:12}), do you want to update it? [Y/n]: " answer
-            if [[ "${answer:0:1}" =~ n|N ]]; then
-                # Install drake installation prerequisites anyways.
-                install_prereqs
-                prereqs.done
-            fi
-        fi
-        # Remove older installation.
-        rm -rf ${DRAKE_INSTALL_PREFIX}
+    prereqs.apt install python3-requests
+	if prereqs.interactive; then
+	    PATH=".":${PATH} drake_installer --interactive
+	else
+	    PATH=".":${PATH} drake_installer
+	fi
+	if [ $? -ne 0 ]; then
+	    prereqs.die "drake_installer failed"
     fi
-
-    echo "Installing drake nightly (${EXPECTED_DRAKE_RELEASE_DATE}:${EXPECTED_DRAKE_VERSION:0:12}) into '${DRAKE_INSTALL_PREFIX}'"
-
-    # Pull and decompress the expected nightly tarball at the installation location.
-    WHICH_DRAKE_TARBALL_SCRIPT="${DRAKE_VENDOR_PREREQS_DIRPATH}/etc/which_drake_tarball.py"
-    DRAKE_NIGHTLY_URL=$(python3 ${WHICH_DRAKE_TARBALL_SCRIPT} ${EXPECTED_DRAKE_VERSION})
-    if curl -o /tmp/drake.tar.gz ${DRAKE_NIGHTLY_URL}; then
-        mkdir -p ${DRAKE_INSTALL_PREFIX}
-        tar xvz -f /tmp/drake.tar.gz -C ${DRAKE_INSTALL_PREFIX} --strip 1
-        rm /tmp/drake.tar.gz
-    else
-        prereqs.die "Failed to pull drake nightly tarball from ${DRAKE_NIGHTLY_URL}"
-    fi
-
-    # Retrieve commit SHA and release date for the recent installation.
-    read -r PULLED_DRAKE_RELEASE_DATE PULLED_DRAKE_VERSION <<< "$(cat ${INSTALLED_DRAKE_VERSION_FILE})"
-    # Ensure an exact match between expected and actual installation versions.
-    if [ "${PULLED_DRAKE_RELEASE_DATE}" -ne "${EXPECTED_DRAKE_RELEASE_DATE}" ] ||
-           [ "${PULLED_DRAKE_VERSION}" != "${EXPECTED_DRAKE_VERSION}" ]; then
-        prereqs.die "Pulled drake nightly version (${PULLED_DRAKE_RELEASE_DATE}:${PULLED_DRAKE_VERSION:0:12})" \
-                    " does not match expected version (${EXPECTED_DRAKE_RELEASE_DATE}:${EXPECTED_DRAKE_VERSION:0:12})."
-    fi
-
-    # Install drake installation prerequisites.
-    install_prereqs
 fi
 
 prereqs.done
