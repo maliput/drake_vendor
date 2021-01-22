@@ -11,7 +11,7 @@ Make sure drake is installed with the version specified in `drake_vendor/package
 (this requires `drake_vendor` itself to have been installed already):
 
 ```bash
-sudo drake-installer
+sudo drake_installer
 ```
 
 Mark a dependency on `drake_vendor` in downstream's `package.xml`:
@@ -43,7 +43,7 @@ It may be either a semantically versioned release (e.g. 0.18.0) or a nightly sna
 no guarantees that nightly snapshots will be eternally available.
 
 A verification file, `VERSION.TXT` is also provided to check that any installed version
-matches the version specified in `package.xml`. This is used by both the `drake-installer`
+matches the version specified in `package.xml`. This is used by both the `drake_installer`
 utility for a post-installation check and the exported `drake_vendor` cmake modules to
 verify the discovered drake is the correct version. This verification file will be
 deprecated when the drake binary installation can advertise it's semantic version itself
@@ -60,7 +60,7 @@ deprecated when the drake binary installation can advertise it's semantic versio
   * Use `major.minor.yyyymmdd` for a nightly snapshot release, e.g. `0.18.20200613`
 * Update the verification file `VERSION.TXT` with the version file from the release
 * Build and install `drake_vendor`
-* Execute `sudo drake-installer`, this will install to `/opt/drake/<your-new-version>`
+* Execute `sudo drake_installer`, this will install to `/opt/drake/<your-new-version>`
 * Be froody
 
 ### Redirecting to A Different Install Location
@@ -77,7 +77,7 @@ with the following steps to ensure `drake_vendor` is aware of it:
 
 ## Utilities
 
-### The drake-installer Utility
+### The drake_installer Utility
 
 A utility exists to assist with installing/upgrading drake and its dependencies. Prior
 to any installation/upgrade, it checks to see if a compatible version (provided via
@@ -86,13 +86,13 @@ check the newly installed version to check that it matches against the `VERSION.
 stored in this repo.
 
 ```bash
-$ sudo ./drake-installer --help
+$ sudo ./drake_installer --help
 
 # Install with defaults:
 #  Version: as specified in package.xml
 #  Install directory: /opt/drake/<version>
 #  Distro: as specified by /etc/os-release
-$ sudo ./drake-installer
+$ sudo ./drake_installer
 Installation Details
   Drake Version................20200613
   Ubuntu Distro................bionic
@@ -103,12 +103,12 @@ Fetching https://drake-packages.csail.mit.edu/drake/nightly/drake-20200613-bioni
 Extracting /tmp/drake.tar.gz into /opt/drake
 ```
 
-## The drake-version Utility
+## The drake_version Utility
 
 Another utility is provided to quickly return the contents of the installed drake's
 `VERSION.TXT` file:
 
 ```
-$ drake-version
+$ drake_version
 20200613074556 8d92fae6584f237e5d0989653c0b5915387444bf
 ```

@@ -25,7 +25,7 @@
 ### New features
 
 - Can now fetch semantic version releases (fallback still nightly snapshots), [PR #23](https://github.com/ToyotaResearchInstitute/drake-vendor/pull/23)
-- Installation logic shifted from prereqs to drake-installer utility, [PR #23](https://github.com/ToyotaResearchInstitute/drake-vendor/pull/23)
+- Installation logic shifted from prereqs to drake_installer utility, [PR #23](https://github.com/ToyotaResearchInstitute/drake-vendor/pull/23)
 
 
 ### Known issues

@@ -53,8 +53,8 @@ message(STATUS "Drake Release Commmit........${drake_EXPECTED_RELEASE_COMMIT}")
 
 install(
   PROGRAMS
-    drake-installer
-    drake-version
+    drake_installer
+    drake_version
   DESTINATION bin
 )
 

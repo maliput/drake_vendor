@@ -18,7 +18,7 @@ if (NOT drake_FOUND)
   message(FATAL_ERROR 
     " =====================================================================\n"
     " No working drake installation found at @drake_DIR@.\n \n"
-    " If none exists, use the drake-installer utility to install the\n"
+    " If none exists, use the drake_installer utility to install the\n"
     " required version. See also http://drake.mit.edu/installation.html.\n"
     " =====================================================================\n"
   )
@@ -41,7 +41,7 @@ if("${drake_RELEASE_DATE}" LESS "${drake_EXPECTED_RELEASE_DATE}")
     " =====================================================================\n"
     " ${drake_RELEASE_DATE} < ${drake_EXPECTED_RELEASE_DATE}\n"
     " Found an older drake installation at @drake_DIR@.\n \n"
-    " Use the drake-installer utility to upgrade or re-install.\n"
+    " Use the drake_installer utility to upgrade or re-install.\n"
     " =====================================================================\n"
   )
 endif()
@@ -52,7 +52,7 @@ if("${drake_RELEASE_DATE}" GREATER "${drake_EXPECTED_RELEASE_DATE}")
     " ${drake_RELEASE_DATE} > ${drake_EXPECTED_RELEASE_DATE}\n"
     " Found a newer drake installation at @drake_DIR@.\n \n"
     " Use drake_vendor with env variable DRAKE_INSTALL_PREFIX to redirect\n"
-    " OR the drake-installer utility to reinstall.\n"
+    " OR the drake_installer utility to reinstall.\n"
     " ====================================================================="
   )
 endif()
