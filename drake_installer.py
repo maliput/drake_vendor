@@ -21,24 +21,30 @@ import xml.dom.minidom
 # Argument Parsing
 ################################################################################
 
+
 def parse_command_line_arguments():
     parser = argparse.ArgumentParser(
         description='Drake installation tool',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument('--interactive', action='store_true', help='interactively seek user confirmation if an upgrade is required')
-    parser.add_argument('-c', '--check-only', action='store_true', help='check for an existing installation only')
+    parser.add_argument('--interactive', action='store_true',
+                        help='interactively seek user confirmation if an upgrade is required')
+    parser.add_argument('-c', '--check-only', action='store_true',
+                        help='check for an existing installation only')
     parser.add_argument(
         '-f', '--verification_file', type=str,
-        default=None, help='Drake version file for verification [default: drake_vendor/VERSION.TXT].'
+        default=None,
+        help='Drake version file for verification [default: drake_vendor/VERSION.TXT].'
     )
     parser.add_argument(
         '-v', '--version', type=str,
-        default=None, help='Drake version as number, or date (for nightly snapshots) [default: the version specified in package.xml].'
+        default=None, help='Drake version as number, or date (for nightly snapshots) \
+                            [default: the version specified in package.xml].'
     )
     parser.add_argument(
         '-d', '--distro', type=str, choices=["bionic, focal"],
-        default=None, help='Ubuntu disto [default: the distro detected by the build system][supported: bionic, focal].'
+        default=None, help='Ubuntu disto [default: the distro detected by the build system] \
+                            [supported: bionic, focal].'
     )
     parser.add_argument(
         '-i', '--install_dir', type=str,
@@ -46,9 +52,10 @@ def parse_command_line_arguments():
     )
     return parser.parse_args()
 
+
 def populate_unconfigured_arguments(args):
     if args.version is None:
-        local_package_xml_path =  os.path.join(
+        local_package_xml_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "package.xml"
         )
@@ -114,6 +121,7 @@ def populate_unconfigured_arguments(args):
         else:
             raise FileNotFoundError(f"Could not find drake_vendor's VERSION.TXT")
 
+
 def print_arguments(args):
     print("Installation Details")
     print(f"  Drake Version................{args.version}")
@@ -125,6 +133,7 @@ def print_arguments(args):
 # Verification
 ################################################################################
 
+
 class InstalledVersionCompatibility(enum.Enum):
     UNINSTALLED = "UNINSTALLED"
     COMPATIBLE = "COMPATIBLE"
@@ -132,10 +141,8 @@ class InstalledVersionCompatibility(enum.Enum):
     NEWER = "NEWER"
     OLDER = "OLDER"
 
-def check_installed_version(
-        install_dir:str,
-        verification_file
-    ) -> InstalledVersionCompatibility:
+
+def check_installed_version(install_dir: str, verification_file) -> InstalledVersionCompatibility:
     installed_verification_file = os.path.join(
         install_dir,
         "share",
@@ -162,6 +169,7 @@ def check_installed_version(
 # Installation
 ################################################################################
 
+
 def is_semantic_version(version: str) -> bool:
     """
     Distinguishes what kind of version string it is.
@@ -175,6 +183,7 @@ def is_semantic_version(version: str) -> bool:
         return True
     return False
 
+
 def strip_leading_drake_prefix(tarball: tarfile.TarFile):
     prefix = "drake/"
     offset = len(prefix)
@@ -183,13 +192,13 @@ def strip_leading_drake_prefix(tarball: tarfile.TarFile):
             tarinfo.name = tarinfo.name[offset:]
             yield tarinfo
 
+
 def fetch_and_install(version: str, distro: str, install_dir: str):
     url_root = "https://drake-packages.csail.mit.edu/drake"
     if is_semantic_version(version):
         url = url_root + f"/release/drake-{version}-{distro}.tar.gz"
     else:
         url = url_root + f"/nightly/drake-{version}-{distro}.tar.gz"
-    tarball_filename = "/tmp/drake.tar.gz"
     with tempfile.NamedTemporaryFile(suffix=".tar.gz") as tarball_tempfile:
         print(f"Fetching {url} and saving to {tarball_tempfile.name}")
         r = requests.get(url)
@@ -198,6 +207,7 @@ def fetch_and_install(version: str, distro: str, install_dir: str):
         tarball = tarfile.open(tarball_tempfile.name)
         tarball.extractall(install_dir, strip_leading_drake_prefix(tarball))
         tarball.close()
+
 
 def install_drake_dependencies(install_dir: str, interactive: bool):
     """
@@ -220,6 +230,7 @@ def install_drake_dependencies(install_dir: str, interactive: bool):
 ################################################################################
 # EntryPoint
 ################################################################################
+
 
 def main():
     args = parse_command_line_arguments()
@@ -254,7 +265,7 @@ def main():
         print("VERSION.TXT used for verification purposes in this package, please check.")
     else:
         print("Sanity Check: ok")
-    
+
     install_drake_dependencies(args.install_dir, args.interactive)
 
     return 0

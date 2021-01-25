@@ -47,13 +47,28 @@ message(STATUS "Drake Install Dir............${drake_DIR}")
 message(STATUS "Drake Release Date...........${drake_EXPECTED_RELEASE_DATE}")
 message(STATUS "Drake Release Commmit........${drake_EXPECTED_RELEASE_COMMIT}")
 
+##############################################################################
+# Tests
+##############################################################################
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_flake8 REQUIRED)
+  enable_testing()
+  ament_flake8("--config" ${CMAKE_CURRENT_SOURCE_DIR}/.flake8)
+endif()
+
 ################################################################################
 # Installation
 ################################################################################
 
 install(
   PROGRAMS
-    drake_installer
+    drake_installer.py RENAME drake_installer
+  DESTINATION bin
+)
+
+install(
+  PROGRAMS
     drake_version
   DESTINATION bin
 )
