@@ -63,12 +63,7 @@ endif()
 
 install(
   PROGRAMS
-    drake_installer.py RENAME drake_installer
-  DESTINATION bin
-)
-
-install(
-  PROGRAMS
+    drake_installer
     drake_version
   DESTINATION bin
 )

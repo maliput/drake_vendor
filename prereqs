@@ -11,9 +11,9 @@ prereqs.assert_sudo
 if prereqs.tag_applies "drake|all"; then
     prereqs.apt install python3-requests
 	if prereqs.interactive; then
-	    PATH=".":${PATH} drake_installer.py --interactive
+	    PATH=".":${PATH} drake_installer --interactive
 	else
-	    PATH=".":${PATH} drake_installer.py
+	    PATH=".":${PATH} drake_installer
 	fi
 	if [ $? -ne 0 ]; then
 	    prereqs.die "drake_installer failed"
