@@ -135,5 +135,6 @@ jobs:
       working-directory: ${{ env.ROS_WS }}
       run: |
         . /opt/ros/${ROS_DISTRO}/setup.bash;
-        colcon test --event-handlers=console_direct+;
+        colcon test --packages-select ${PACKAGE_NAME} \
+          --event-handlers=console_direct+;
         colcon test-result --verbose;
