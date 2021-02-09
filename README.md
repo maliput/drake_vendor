@@ -5,23 +5,33 @@
 `drake_vendor` is an ament cmake shim for a binary installation of `drake`,
 easing its use in a `colcon` workspace.
 
-## Basic Usage - Depending on Drake
+## Basic Usage - Downstream CMake Packages
 
-Make sure drake is installed with the version specified in `drake_vendor/package.xml`
-(this requires `drake_vendor` itself to have been installed already):
+**Step 1**: Install `drake_vendor` or include it in your workspace.
 
-```bash
-sudo drake_installer
-```
+This package provides the cmake modules,
+environment hooks and helper scripts to detect, install and
+configure your workspace but *it does not install drake*. This comes
+later.
 
-Mark a dependency on `drake_vendor` in downstream's `package.xml`:
+It will also not block your build, i.e. merely having this package in
+your workspace will not prevent a successful build. Blocking will only
+occur if a downstream package tries to depend on `drake_vendor` and the
+appropriate drake installation cannot be found. This is illustrated
+via the ensuing steps.
+
+**Step 2**: Depend on `drake_vendor`.
+
+Mark a dependency on `drake_vendor` (not `drake`) in your package's
+`package.xml`:
 
 ```xml
 <build_depend>drake_vendor</build_depend>
 ```
 
-Look for `drake_vendor` via CMake and use drake's imported targets as dependencies for
-your libraries/applications.
+**Step 3**: Import CMake targets.
+
+Import `drake` targets via `drake_vendor`:
 
 ```cmake
 find_package(drake_vendor REQUIRED)
@@ -35,23 +45,69 @@ target_link_libraries(my_lib
 )
 ```
 
-## Detailed Information
+**Step 4**: Install `drake` (if not yet installed).
 
-The version to be installed/upgraded is specified in the version element of `package.xml`.
-It may be either a semantically versioned release (e.g. 0.18.0) or a nightly snapshot 
+At this point, if you attempt to build your downstream package and
+you do not have an installation of `drake` that matches the version
+specified in `drake_vendor/package.xml`, the build will abort and you
+will be provided with an informative error message:
+
+```
+CMake Error at /home/snorri/workspace/install/drake_vendor/share/drake_vendor/cmake/drake-extras.cmake:18 (message):
+   =====================================================================
+   No working drake installation found at /opt/drake/20200613.
+   
+   If none exists, use the drake_installer utility to install the
+   required version. See also http://drake.mit.edu/installation.html.
+   =====================================================================
+
+Call Stack (most recent call first):
+  /home/snorri/workspace/install/drake_vendor/share/drake_vendor/cmake/drake_vendorConfig.cmake:38 (include)
+  CMakeLists.txt:15 (find_package)
+```
+Proceed to install drake:
+
+```bash
+# If drake_vendor is in your workspace
+cd src/drake_vendor && ./drake_installer
+
+# If drake_vendor is installed in an underlay
+drake_installer
+```
+
+## Basic Usage - Downstream Python Packages
+
+Steps 1 and 4 remain the same. The python workflow however, does not yet have the
+infrastructure to verify and provide a friendly notification with instructions
+when drake is not available. The first signal that a drake installation is missing
+will occur when importing `pydrake`:
+
+```
+$ python3 -c 'import pydrake; print(pydrake.__file__)'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'pydrake'
+```
+
+At that point, proceed to install drake following the preceding instructions in step 4.
+
+## Versioning Info
+
+The version specified in `drake_vendor/package.xml`
+may be either a semantically versioned release (e.g. 0.18.0) or a nightly snapshot 
 (0.18.20200613). Semantically versioned releases are preferred since the drake team makes
 no guarantees that nightly snapshots will be eternally available.
 
-A verification file, `VERSION.TXT` is also provided to check that any installed version
-matches the version specified in `package.xml`. This is used by both the `drake_installer`
-utility for a post-installation check and the exported `drake_vendor` cmake modules to
+The included verification file, `drake_vendor/VERSION.TXT` is used to confirm that an
+installed version matches the version specified in `package.xml`. This is used by both
+the `drake_installer` utility and the exported `drake_vendor` cmake modules to
 verify the discovered drake is the correct version. This verification file will be
 deprecated when the drake binary installation can advertise it's semantic version itself
-(see [drake#14509](https://github.com/RobotLocomotion/drake/issues/14509).
+(see [drake#14509](https://github.com/RobotLocomotion/drake/issues/14509)).
 
 ## Advanced Usage
 
-### Specifying a Different Version
+### Requiring a Different Version
 
 * Fork/branch `drake_vendor`
 * Include your fork/branch of `drake_vendor` in your workspace
