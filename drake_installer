@@ -60,7 +60,7 @@ def populate_unconfigured_arguments(args):
             "package.xml"
         )
         # Could use ament_index_python, but this is robust to sudo and
-        # ament_index_python does not profer any other advantage
+        # ament_index_python does not proffer any other advantage
         installed_package_xml_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
             "share",
@@ -204,10 +204,14 @@ def fetch_and_install(version: str, distro: str, install_dir: str):
         r = requests.get(url)
         open(tarball_tempfile.name, 'wb').write(r.content)
         print(f"Extracting {tarball_tempfile.name} into {install_dir}")
-        tarball = tarfile.open(tarball_tempfile.name)
-        tarball.extractall(install_dir, strip_leading_drake_prefix(tarball))
-        tarball.close()
-
+        try:
+            tarball = tarfile.open(tarball_tempfile.name)
+            tarball.extractall(install_dir, strip_leading_drake_prefix(tarball))
+            tarball.close()
+        except PermissionError:
+            print(f" - Permissions required, using sudo:")
+            os.system(f"sudo mkdir -p {install_dir}")
+            os.system(f"sudo tar -xzf {tarball_tempfile.name} -C {install_dir} --strip 1")
 
 def install_drake_dependencies(install_dir: str, interactive: bool):
     """
@@ -256,13 +260,18 @@ def main():
                 print(f"Please upgrade manually or point to a different root to proceed.")
                 return 1
         print(f"Removing an older version found at {args.install_dir}.")
-        shutil.rmtree(args.install_dir)
+        try:
+            shutil.rmtree(args.install_dir)
+        except PermissionError:
+            print(f" - Permissions required, using sudo:")
+            os.system(f"sudo rm -rf {install_dir}")
     fetch_and_install(args.version, args.distro, args.install_dir)
     result = check_installed_version(args.install_dir, args.verification_file)
     if result != InstalledVersionCompatibility.COMPATIBLE:
         print(result.value)
         print("Sanity Check: The installed VERSION.TXT does not match the stored")
         print("VERSION.TXT used for verification purposes in this package, please check.")
+        return 1
     else:
         print("Sanity Check: ok")
 
