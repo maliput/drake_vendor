@@ -8,7 +8,7 @@
     Use major.minor.patch for a semantically versioned release, e.g. 1.25.0
     Use major.minor.yyyymmdd for a nightly snapshot release, e.g. 1.25.20200613
   -->
-  <version>0.18.20200613</version>
+  <version>0.22.0</version>
   <description>Ament-CMake shim over the drake library.</description>
   <maintainer email="daniel.stonier@tri.global">Daniel Stonier</maintainer>
   <license file="LICENSE">BSD 3-Clause</license>
