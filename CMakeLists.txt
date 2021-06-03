@@ -69,11 +69,6 @@ install(
 )
 
 install(
-  PROGRAMS prereqs
-  DESTINATION share
-)
-
-install(
   FILES VERSION.TXT
   DESTINATION share
 )
