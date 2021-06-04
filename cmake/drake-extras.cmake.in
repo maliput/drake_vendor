@@ -36,7 +36,8 @@ string(REPLACE " " ";" drake_VERSION_LIST ${drake_VERSION})
 list(GET drake_VERSION_LIST 0 drake_RELEASE_DATE)
 list(GET drake_VERSION_LIST 1 drake_RELEASE_COMMIT)
 
-if("${drake_RELEASE_DATE}" LESS "${drake_EXPECTED_RELEASE_DATE}")
+if((NOT "${drake_RELEASE_COMMIT}" STREQUAL "${drake_EXPECTED_RELEASE_COMMIT}")
+    AND ("${drake_RELEASE_DATE}" LESS "${drake_EXPECTED_RELEASE_DATE}"))
   message(FATAL_ERROR
     " =====================================================================\n"
     " ${drake_RELEASE_DATE} < ${drake_EXPECTED_RELEASE_DATE}\n"
@@ -46,7 +47,8 @@ if("${drake_RELEASE_DATE}" LESS "${drake_EXPECTED_RELEASE_DATE}")
   )
 endif()
 
-if("${drake_RELEASE_DATE}" GREATER "${drake_EXPECTED_RELEASE_DATE}")
+if((NOT "${drake_RELEASE_COMMIT}" STREQUAL "${drake_EXPECTED_RELEASE_COMMIT}")
+    AND ("${drake_RELEASE_DATE}" GREATER "${drake_EXPECTED_RELEASE_DATE}"))
   message(FATAL_ERROR
     " =====================================================================\n"
     " ${drake_RELEASE_DATE} > ${drake_EXPECTED_RELEASE_DATE}\n"

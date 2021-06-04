@@ -157,9 +157,16 @@ def check_installed_version(install_dir: str, verification_file) -> InstalledVer
     if filecmp.cmp(verification_file, installed_verification_file, shallow=False):
         return InstalledVersionCompatibility.COMPATIBLE
     with open(verification_file) as f:
-        verification_datetime = f.read().split()[0]
+        version_fields = f.read().split()
+        verification_datetime = version_fields[0]
+        verification_commit = version_fields[1]
     with open(installed_verification_file) as f:
-        installed_datetime = f.read().split()[0]
+        version_fields = f.read().split()
+        installed_datetime = version_fields[0]
+        installed_commit = version_fields[1]
+    if verification_commit == installed_commit:
+        # compatible if commit sha matches even if date doesn't
+        return InstalledVersionCompatibility.COMPATIBLE
     if verification_datetime > installed_datetime:
         return InstalledVersionCompatibility.OLDER
     else:
