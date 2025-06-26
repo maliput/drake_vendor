@@ -16,62 +16,61 @@ jobs:
     name: Compile and test
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:20.04
+      image: ghcr.io/maliput/ci_foxy_image:latest
+      credentials:
+         username: ${{ github.actor }}
+         password: ${{ secrets.GITHUB_TOKEN }}
     steps:
-    # setup-ros first since it installs git, which is needed to fetch all branches from actions/checkout
-    - uses: ros-tooling/setup-ros@v0.3
-      env:
-        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         path: ${{ env.ROS_WS }}/src/${{ env.PACKAGE_NAME }}
     # clone private dependencies
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         repository: maliput/maliput
         fetch-depth: 0
         path: ${{ env.ROS_WS }}/src/maliput
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         repository: maliput/maliput_py
         fetch-depth: 0
         path: ${{ env.ROS_WS }}/src/maliput_py
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         repository: maliput/maliput_object
         fetch-depth: 0
         path: ${{ env.ROS_WS }}/src/maliput_object
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         repository: maliput/maliput_dragway
         fetch-depth: 0
         path: ${{ env.ROS_WS }}/src/maliput_dragway
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         repository: maliput/maliput_multilane
         fetch-depth: 0
         path: ${{ env.ROS_WS }}/src/maliput_multilane
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         repository: maliput/maliput_malidrive
         fetch-depth: 0
         path: ${{ env.ROS_WS }}/src/maliput_malidrive
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         repository: maliput/delphyne
         fetch-depth: 0
         path: ${{ env.ROS_WS }}/src/delphyne
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         repository: maliput/delphyne_gui
         fetch-depth: 0
         path: ${{ env.ROS_WS }}/src/delphyne_gui
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         repository: maliput/maliput_integration
         fetch-depth: 0
         path: ${{ env.ROS_WS }}/src/maliput_integration
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         repository: maliput/maliput_integration_tests
         fetch-depth: 0
