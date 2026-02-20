@@ -38,7 +38,7 @@ def parse_command_line_arguments():
     )
     parser.add_argument(
         '-v', '--version', type=str,
-        default=None, help='Drake version as number, or date (for nightly snapshots) \
+        default=None, help='Drake semantic version (e.g. 0.27.0) \
                             [default: the version specified in package.xml].'
     )
     parser.add_argument(
@@ -77,15 +77,13 @@ def populate_unconfigured_arguments(args):
         package_xml = xml.dom.minidom.parse(package_xml_path)
         args.version = package_xml.getElementsByTagName("version")[0].firstChild.nodeValue
         #
-        # Drake is distributing two kinds of binary
-        #  - Official releases, versioned semantically with a major.minor.patch number
-        #  - Nightly snapshots, which are represent via a major.minor.yyyymmdd number
+        # Drake binary releases are versioned semantically with a major.minor.patch number.
+        # Nightly snapshots are no longer supported.
         #
         # Ament will complain if anything but a semantic version number is used (this
         # rules out, e.g. 20200613 as a possible choice of format for the version element).
-        # Subsequently, overloading the patch number is not ideal, but a reasonable
-        # option given that drake doesn't distribute patched releases yet, and if it does
-        # so, the reliance on nightly snapshots can be deprecated.
+        # The patch number is checked for legacy nightly snapshot format (yyyymmdd) for
+        # backwards compatibility, but nightly versions will be rejected at install time.
         patch_version = args.version.split('.')[2]
         if len(patch_version) == 8:
             args.version = patch_version
@@ -182,7 +180,7 @@ def is_semantic_version(version: str) -> bool:
     Distinguishes what kind of version string it is.
 
     Args:
-        version: the version string, either major.minor.patch or yyyymmdd nightly snapshot version
+        version: the version string, either major.minor.patch or yyyymmdd (legacy nightly format)
     Returns
         True if the version is a major.minor.patch version
     """
@@ -200,12 +198,18 @@ def strip_leading_drake_prefix(tarball: tarfile.TarFile):
             yield tarinfo
 
 
-def fetch_and_install(version: str, distro: str, install_dir: str):
-    url_root = "https://drake-packages.csail.mit.edu/drake"
-    if is_semantic_version(version):
-        url = url_root + f"/release/drake-{version}-{distro}.tar.gz"
-    else:
-        url = url_root + f"/nightly/drake-{version}-{distro}.tar.gz"
+def fetch_and_install(version: str, distro: str, install_dir: str, verification_file: str):
+    url_root = "https://github.com/RobotLocomotion/drake/releases/download"
+    if not is_semantic_version(version):
+        raise RuntimeError(
+            f"Nightly snapshot versions (e.g. {version}) are no longer supported. "
+            "Only semantic versions (e.g. 0.27.0) are available from GitHub releases."
+        )
+    # Read the date from VERSION.TXT to construct the tarball filename
+    with open(verification_file) as f:
+        version_fields = f.read().split()
+        date_str = version_fields[0][:8]  # extract yyyymmdd from the datetime stamp
+    url = url_root + f"/v{version}/drake-{date_str}-{distro}.tar.gz"
     with tempfile.NamedTemporaryFile(suffix=".tar.gz") as tarball_tempfile:
         print(f"Fetching {url} and saving to {tarball_tempfile.name}")
         r = requests.get(url)
@@ -236,7 +240,7 @@ def install_drake_dependencies(install_dir: str, interactive: bool):
     if interactive:
         os.system(f"sudo {prereqs_script}")
     else:
-        os.system(f"yes | sudo {prereqs_script}")
+        os.system(f"yes 2>/dev/null | sudo {prereqs_script}")
 
 ################################################################################
 # EntryPoint
@@ -271,8 +275,8 @@ def main():
             shutil.rmtree(args.install_dir)
         except PermissionError:
             print(f" - Permissions required, using sudo:")
-            os.system(f"sudo rm -rf {install_dir}")
-    fetch_and_install(args.version, args.distro, args.install_dir)
+            os.system(f"sudo rm -rf {args.install_dir}")
+    fetch_and_install(args.version, args.distro, args.install_dir, args.verification_file)
     result = check_installed_version(args.install_dir, args.verification_file)
     if result != InstalledVersionCompatibility.COMPATIBLE:
         print(result.value)

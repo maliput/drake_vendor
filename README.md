@@ -94,9 +94,8 @@ At that point, proceed to install drake following the preceding instructions in 
 ## Versioning Info
 
 The version specified in `drake_vendor/package.xml`
-may be either a semantically versioned release (e.g. 0.18.0) or a nightly snapshot 
-(0.18.20200613). Semantically versioned releases are preferred since the drake team makes
-no guarantees that nightly snapshots will be eternally available.
+must be a semantically versioned release (e.g. 0.27.0). Nightly snapshot versions
+are no longer supported since Drake binaries are now fetched from GitHub releases.
 
 The included verification file, `drake_vendor/VERSION.TXT` is used to confirm that an
 installed version matches the version specified in `package.xml`. This is used by both
@@ -112,8 +111,7 @@ deprecated when the drake binary installation can advertise it's semantic versio
 * Fork/branch `drake_vendor`
 * Include your fork/branch of `drake_vendor` in your workspace
 * Update the version in `drake_vendor/package.xml`
-  * Use `major.minor.patch` for a semantically versioned release, e.g. `0.18.0`
-  * Use `major.minor.yyyymmdd` for a nightly snapshot release, e.g. `0.18.20200613`
+  * Use `major.minor.patch` for a semantically versioned release, e.g. `0.27.0`
 * Update the verification file `VERSION.TXT` with the version file from the release
 * Build and install `drake_vendor`
 * Execute `sudo drake_installer`, this will install to `/opt/drake/<your-new-version>`
@@ -150,13 +148,13 @@ $ sudo ./drake_installer --help
 #  Distro: as specified by /etc/os-release
 $ sudo ./drake_installer
 Installation Details
-  Drake Version................20200613
-  Ubuntu Distro................bionic
+  Drake Version................0.27.0
+  Ubuntu Distro................focal
   Verification File............/home/snorri/workspace/src/drake_vendor/VERSION.TXT
-  Installation Directory......./opt/drake
+  Installation Directory......./opt/drake/0.27.0
   Existing Installation........UNINSTALLED
-Fetching https://drake-packages.csail.mit.edu/drake/nightly/drake-20200613-bionic.tar.gz and saving to /tmp/drake.tar.gz
-Extracting /tmp/drake.tar.gz into /opt/drake
+Fetching https://github.com/RobotLocomotion/drake/releases/download/v0.27.0/drake-20210216-focal.tar.gz and saving to /tmp/drake.tar.gz
+Extracting /tmp/drake.tar.gz into /opt/drake/0.27.0
 ```
 
 ## The drake_version Utility
